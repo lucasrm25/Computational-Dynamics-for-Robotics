@@ -61,13 +61,18 @@ disp(C_omega_IC_vec);
 
     
 % From this, we extract by hand:
-B = [1,  0,          -sin(beta);
-     0, +cos(alpha), +sin(alpha)*cos(beta);
-     0, -sin(alpha), +cos(alpha)*cos(beta)];
+euler = [alpha, beta, gamma].';
+euler_dot = [alpha_dot, beta_dot, gamma_dot].';
+B = equationsToMatrix(C_omega_IC_vec, euler_dot);
 disp('B:')
 disp(B)
+
+
+% I_omega_IC_vec = A_IC * C_omega_IC_vec,  C_omega_IC_vec = B * euler_dot
+% =>  euler_dot = inv( A_IC * B ) * I_omega_IC_vec
+
  
-% We can now create the inverse of A_IC*B
+% We can now create the inverse of A_IC*B.
 AB_inv = inv(A_IC*B);
 AB_inv = simplify(expand(AB_inv));
 disp('AB_inv:');

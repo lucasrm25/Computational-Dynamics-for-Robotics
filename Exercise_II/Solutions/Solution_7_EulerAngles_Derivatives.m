@@ -75,7 +75,7 @@ disp('A_IC3_dot:');
 disp(A_IC3_dot);
 
 % Compute the matrix omega:
-C3_omega_IC3 = A_C3I*A_IC3_dot;
+C3_omega_IC3 = A_C3I* ;
 % ... and symbolically simplify the result:
 C3_omega_IC3 = simplify(expand(C3_omega_IC3));
 disp('C3_omega_IC3:');
@@ -164,6 +164,7 @@ gamma_num     = 30*pi/180;
 alpha_dot_num = 1;
 beta_dot_num  = 1;
 gamma_dot_num = 1;
+while true
 for i = 1:n
     % Euler forward integration:
     alpha_num = alpha_num + alpha_dot_num*delta_t;
@@ -187,6 +188,7 @@ for i = 1:n
     v_omega.setCoords(C3, C3_omega_IC3_vec_num);
     % Update graphics:
     drawnow();
+end
 end
 print(gcf,'-r600','-djpeg','Problem_7_Output.jpg');
 
