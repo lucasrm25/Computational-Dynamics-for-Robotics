@@ -1,11 +1,11 @@
-% classdef LinkedRollingContactJointCLASS < handle
+% classdef LinkedRotationalJointCLASS < handle
 %
 % Defines a rotational joint in a kinematic tree that is implemented as a
 % set of linked objects.  
 % 
 % Public Methods:
-%  joint = LinkedRollingContactJointCLASS(env, predBody, sucBody) 
-%            Creates a rolling contact joint object that links the body
+%  joint = LinkedRotationalJointCLASS(env, predBody, sucBody) 
+%            Creates a rotational joint object that links the body
 %            specified in 'predBody' with the body specified in 'sucBody'.
 %            Both are objects of the type 'LinkedRigidBodyDynamicsCLASS', 
 %            and function as predecessor and successor in a kinematic tree.
@@ -58,7 +58,7 @@
 % ToDo:                                                                  
 % Rename file since for matlab class names and file names must be the same!
 % *************************************************************************
-classdef LinkedRollingContactJointCLASS < handle
+classdef LinkedRotationalJointCLASS < handle
     % Public Properties
     properties
         P_r_PDp = [0;0;0];% Position of the joint in the predecessor body
@@ -68,7 +68,6 @@ classdef LinkedRollingContactJointCLASS < handle
         A_SDs = eye(3);   % Orientation of the joint w.r.t the successor 
                           % body
         q;                % The joint angle
-        r;                % The radius of the rolling contact
         jointName  = '';  % Defaults to blank
         autoUpdate = 'true'  % In the default configuration, the 
                           % graphical output is updated every time a
@@ -93,7 +92,7 @@ classdef LinkedRollingContactJointCLASS < handle
     % Public Methods
     methods
         % Constructor
-        function obj = LinkedRollingContactJointCLASS(env, predBody, sucBody)
+        function obj = LinkedRotationalJointCLASS(env, predBody, sucBody)
             % Store the information about the predecessor and successor of
             % this joint:
             obj.predBody = predBody;
@@ -141,14 +140,20 @@ classdef LinkedRollingContactJointCLASS < handle
             
             % Compute the position, velocity, and acceleration of each
             % successing coordinate system:
-            A_IDp           = A_IP * obj.A_PDp;
-            Dp_r_IDp        = obj.A_PDp' * (P_r_IP + obj.P_r_PDp);
+            % *************************************************************************
+            % ToDo:                                                                  
+            % Complete the code for the following expressions to learn how to
+            % implement the recursive relationships between the different coordinate
+            % systems of predicessor and successor bodies:
+            % *************************************************************************
+            A_IDp           = obj.A_IP * obj.A_PDp;
+            Dp_r_IDp        = obj.A_PDp' * ( P_r_IP + );
             
             A_IDs           = A_IDp * A_DpDs;
-            Ds_r_IDs        = A_DpDs' * (Dp_r_IDp + Dp_r_DpDs);
+            Ds_r_IDs        = ;
             
             A_IS            = A_IDs * obj.A_SDs';
-            S_r_IS          = obj.A_SDs * Ds_r_IDs - obj.S_r_SDs;
+            S_r_IS          = ;
             
             % Pass this information on to the successor body:
             obj.sucBody.recursiveForwardKinematics(S_r_IS, A_IS);
@@ -214,12 +219,10 @@ classdef LinkedRollingContactJointCLASS < handle
             % *************************************************************************
             % ToDo:                                                                  
             % Complete the code to compute the motion accross the joint to implement
-            % the joint functions we defined in class: 
+            % the joint functions we defined in class:
             % *************************************************************************
-            Dp_r_DpDs = [-obj.r*gamma;0;0];
-            A_DpDs    = [+cos(gamma), -sin(gamma), 0;
-                         +sin(gamma), +cos(gamma), 0;
-                         +0         , +0         , 1];
+            Dp_r_DpDs = ;
+            A_DpDs    = ;
         end
         % Update the graphic objects, if a value has changed
         function update(obj)

@@ -214,7 +214,7 @@ classdef LinkedRotationalJointCLASS < handle
         function [Dp_r_DpDs, A_DpDs] = JointFunction(obj, q)
             gamma = q;
             Dp_r_DpDs = [0;0;0];
-            A_DpDs    = [+cos(gamma), -sin(gamma), 0;
+            A_DpDs    = [+cos(gamma), -sin(gamma), 0;   % rotation about z-axis
                          +sin(gamma), +cos(gamma), 0;
                          +0         , +0         , 1];
         end

@@ -308,6 +308,7 @@ classdef LinkedRigidBodyDynamicsCLASS < handle
                 % continue?
                 % *************************************************************************
                 for i=1:obj.nChildren
+                    obj.childJoints{i}.recursiveForwardKinematics(obj.B_r_IB,obj.A_IB);
                 end
             end
         end

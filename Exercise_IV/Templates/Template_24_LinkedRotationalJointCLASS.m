@@ -140,20 +140,20 @@ classdef LinkedRotationalJointCLASS < handle
             
             % Compute the position, velocity, and acceleration of each
             % successing coordinate system:
-% *************************************************************************
-% ToDo:                                                                  
-% Complete the code for the following expressions to learn how to
-% implement the recursive relationships between the different coordinate
-% systems of predicessor and successor bodies:
-% *************************************************************************
-            A_IDp           = ;
-            Dp_r_IDp        = ;
+            % *************************************************************************
+            % ToDo:                                                                  
+            % Complete the code for the following expressions to learn how to
+            % implement the recursive relationships between the different coordinate
+            % systems of predicessor and successor bodies:
+            % *************************************************************************
+            A_IDp           = obj.A_IP * obj.A_PDp;
+            Dp_r_IDp        = obj.A_PDp' * ( P_r_IP + obj.P_r_PDp);
             
-            A_IDs           = ;
-            Ds_r_IDs        = ;
+            A_IDs           = A_IDp * A_DpDs;
+            Ds_r_IDs        = A_DpDs' * ( Dp_r_IDp + Dp_r_DpDs );
             
-            A_IS            = ;
-            S_r_IS          = ;
+            A_IS            = A_IDs * obj.A_SDs';
+            S_r_IS          = obj.A_SDs * Ds_r_IDs - obj.S_r_SDs;
             
             % Pass this information on to the successor body:
             obj.sucBody.recursiveForwardKinematics(S_r_IS, A_IS);
@@ -216,13 +216,15 @@ classdef LinkedRotationalJointCLASS < handle
     methods (Access = private)
         function [Dp_r_DpDs, A_DpDs] = JointFunction(obj, q)
             gamma = q;
-% *************************************************************************
-% ToDo:                                                                  
-% Complete the code to compute the motion accross the joint to implement
-% the joint functions we defined in class:
-% *************************************************************************
-            Dp_r_DpDs = ;
-            A_DpDs    = ;
+            % *************************************************************************
+            % ToDo:                                                                  
+            % Complete the code to compute the motion accross the joint to implement
+            % the joint functions we defined in class:
+            % *************************************************************************
+            Dp_r_DpDs = [0 0 0]';
+            A_DpDs    = [+cos(gamma), -sin(gamma), 0;
+                         +sin(gamma), +cos(gamma), 0;
+                         +0         , +0         , 1];
         end
         % Update the graphic objects, if a value has changed
         function update(obj)
