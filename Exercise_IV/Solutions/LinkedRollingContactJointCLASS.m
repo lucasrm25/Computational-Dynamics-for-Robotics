@@ -128,7 +128,7 @@ classdef LinkedRollingContactJointCLASS < handle
         function recursiveOutput(obj, spaceString)
             disp([spaceString,'###### BEGIN JOINT #####']);
             % Display some information about this joint:
-            disp([spaceString, '" ',obj.description,' "']);
+            disp([spaceString, '" ',obj.jointName,' "']);
             % recursively call the successor body and add three spaces so
             % we get a nice indentation: 
             obj.sucBody.recursiveOutput([spaceString,'   ']);

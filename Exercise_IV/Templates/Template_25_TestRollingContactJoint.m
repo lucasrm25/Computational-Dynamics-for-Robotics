@@ -51,10 +51,10 @@ rollingContact.r = r;  % Set the radius of the rolling contact
 % contact joint in predecessor (ground) and successor (stance leg) to
 % learn what these values mean in an actual application:  
 % *************************************************************************
-rollingContact.P_r_PDp = ;
-rollingContact.A_PDp   = ;
-rollingContact.S_r_SDs = ;
-rollingContact.A_SDs   = ;
+rollingContact.P_r_PDp = [0;r;0];
+rollingContact.A_PDp   = eye(3);
+rollingContact.S_r_SDs = [-r;dy-l+r;0];
+rollingContact.A_SDs   = eye(3);
 rollingContact.jointName = 'Rolling Contact';
 rollingContact.autoUpdate = false;
 rollingContact.scale      = 0.2;

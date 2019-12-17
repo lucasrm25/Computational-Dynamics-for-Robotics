@@ -1,22 +1,17 @@
-% classdef LinkedRotationalJointCLASS < handle
+% classdef LinkedGenericJointCLASS_v2 < LinkedJointObjectCLASS_v2
 %
-% Defines a rotational joint in a kinematic tree that is implemented as a
-% set of linked objects.  
+% Defines a generic joint (without any specific motion) in a kinematic tree
+% that is implemented as a set of linked objects.  
 % 
 % Public Methods:
-%  joint = LinkedRotationalJointCLASS(env, predBody, sucBody) 
-%            Creates a rotational joint object that links the body
+%  joint = LinkedGenericJointCLASS_v2(env, predBody, sucBody) 
+%            Creates a generic joint object that links the body
 %            specified in 'predBody' with the body specified in 'sucBody'.
-%            Both are objects of the type 'LinkedRigidBodyDynamicsCLASS', 
+%            Both are objects of the type 'LinkedRigidBodyDynamicsCLASS_v2', 
 %            and function as predecessor and successor in a kinematic tree.
 %            The joint is shown in the graphical environment 'env'.
 %  joint.delete()         
 %            Removes the joint from the graphics output and memory   
-%  joint.recursiveOutput(spaceString)
-%            This function recursively displays the object properties in
-%            the matlab command window.  Then calls the 'recursiveOutput'
-%            routine of the successor body. Display starts with an
-%            identation of 'spaceString'.
 %  joint.updateGraphics() 
 %            This function forces and update of the graphical  output. If
 %            the property 'autoUpdate' is set to 'false', changes in the
@@ -32,6 +27,7 @@
 %  joint.recursiveGraphicsUpdate(obj)
 %            Calls the internal 'updateGraphics()' function.  Then
 %            recursively calls the child joints. 
+%  + All methods inherited from LinkedJointObjectCLASS_v2
 %
 % Public Properties:
 %   P_r_PDp    % Position of the joint in the predecessor body
@@ -41,24 +37,20 @@
 %   q          % The joint angle.  
 %   jointName  % A string with the name of the joint
 %   autoUpdate % If this property is set to 'true', the graphical output
-%                will be updated every time another public  property
+%                will be updated every time another public property
 %                changes.  If it is set to false, the user has to force the
 %                graphical update, by calling the function
 %                'joint.updateGraphics()'  
 %   scale      % This value can be used to scale the size of the coordinate
 %                systems for Dp and Ds. 
-%   description % A string describing the joint
+%  + All properties inherited from LinkedJointObjectCLASS_v2
 %
 %   C. David Remy remy@inm.uni-stuttgart.de
 %   Matlab R2018
 %   12/21/2018
 %   v22
 %
-% *************************************************************************
-% ToDo:                                                                  
-% Rename file since for matlab class names and file names must be the same!
-% *************************************************************************
-classdef LinkedRotationalJointCLASS < handle
+classdef LinkedGenericJointCLASS_v2 < LinkedJointObjectCLASS_v2
     % Public Properties
     properties
         P_r_PDp = [0;0;0];% Position of the joint in the predecessor body
@@ -73,34 +65,26 @@ classdef LinkedRotationalJointCLASS < handle
                           % graphical output is updated every time a
                           % variable changes.  This is convenient, but can
                           % really slow down everything.
-        scale = 1;        % To draw the coordinate systems of the joint smaller
-        description = ''; % A string describing the joint
+        scale = 1;        % To draw the coordinate systems of the joint smaller     
     end
-    % Private Properties
-    properties (SetAccess = private, GetAccess = private)
+    % Protected Properties
+    properties (SetAccess = protected, GetAccess = protected)
         % Objects for graphical visualization:
         env;       % Graphical environment
         Dp;        % A bound coordinate system, attached to the joint at 
                    % the predecessor
         Ds;        % A bound coordinate system, attached to the joint at
                    % the sucessor
-        predBody;  % This is the predecessor of the joint in the kinematic
-                   % tree
-        sucBody;   % This is the successor of the joint in the kinematic
-                   % tree
     end
     % Public Methods
     methods
         % Constructor
-        function obj = LinkedRotationalJointCLASS(env, predBody, sucBody)
-            % Store the information about the predecessor and successor of
-            % this joint:
-            obj.predBody = predBody;
-            obj.sucBody = sucBody;
-            % Now link this body outward and inward, by registering it
-            % with the parent and child bodies:
-            sucBody.setParentJoint(obj);
-            predBody.addChildJoint(obj);
+        function obj = LinkedGenericJointCLASS_v2(env, predBody, sucBody)
+            % Superclass constructors must be called explicitly, as we need
+            % to decide which arguments we pass to each constructor.
+            %
+            % Invoke superclass constructor to create linked list:
+            obj = obj@LinkedJointObjectCLASS_v2(predBody, sucBody);
             % Create a graphical representation:
             obj.env = env;
             obj.Dp        = BoundCoSysCLASS(env, predBody.A_IB*obj.A_PDp,  predBody.A_IB*(predBody.B_r_IB + obj.P_r_PDp));
@@ -114,6 +98,7 @@ classdef LinkedRotationalJointCLASS < handle
         end
         % Remove everything from the graphics window upon deletion
         function delete(obj)
+            % Superclass desctructor is called automatically
             delete(obj.Dp);
             delete(obj.Ds);
         end
@@ -125,35 +110,20 @@ classdef LinkedRotationalJointCLASS < handle
         function updateGraphics(obj)
             update(obj)
         end
-        function recursiveOutput(obj, spaceString)
-            disp([spaceString,'###### BEGIN JOINT #####']);
-            % Display some information about this joint:
-            disp([spaceString, '" ',obj.description,' "']);
-            % recursively call the successor body and add three spaces so
-            % we get a nice indentation: 
-            obj.sucBody.recursiveOutput([spaceString,'   ']);
-            disp([spaceString,'###### END JOINT #######']);
-        end
         function recursiveForwardKinematics(obj, P_r_IP, A_IP)
             % Rotation and displacement about the joint:
             [Dp_r_DpDs, A_DpDs] = obj.JointFunction(obj.q);
             
             % Compute the position, velocity, and acceleration of each
             % successing coordinate system:
-            % *************************************************************************
-            % ToDo:                                                                  
-            % Complete the code for the following expressions to learn how to
-            % implement the recursive relationships between the different coordinate
-            % systems of predicessor and successor bodies:
-            % *************************************************************************
-            A_IDp           = obj.A_IP * obj.A_PDp;
-            Dp_r_IDp        = obj.A_PDp' * ( P_r_IP + );
+            A_IDp           = A_IP * obj.A_PDp;
+            Dp_r_IDp        = obj.A_PDp' * (P_r_IP + obj.P_r_PDp);
             
             A_IDs           = A_IDp * A_DpDs;
-            Ds_r_IDs        = ;
+            Ds_r_IDs        = A_DpDs' * (Dp_r_IDp + Dp_r_DpDs);
             
             A_IS            = A_IDs * obj.A_SDs';
-            S_r_IS          = ;
+            S_r_IS          = obj.A_SDs * Ds_r_IDs - obj.S_r_SDs;
             
             % Pass this information on to the successor body:
             obj.sucBody.recursiveForwardKinematics(S_r_IS, A_IS);
@@ -212,17 +182,16 @@ classdef LinkedRotationalJointCLASS < handle
             end
         end
     end
-    % Private Methods
-    methods (Access = private)
+    % Protected Methods
+    methods (Access = protected)
         function [Dp_r_DpDs, A_DpDs] = JointFunction(obj, q)
-            gamma = q;
-            % *************************************************************************
-            % ToDo:                                                                  
-            % Complete the code to compute the motion accross the joint to implement
-            % the joint functions we defined in class:
-            % *************************************************************************
-            Dp_r_DpDs = ;
-            A_DpDs    = ;
+            % Since this is a generic joint, it wouldn't make sense to
+            % implement a specific type of joint (e.g., rotational). This
+            % will happen in all the classes that inherit from this CLASS.
+            % So the functionality in this SuperCLASS is only a constant
+            % function. 
+            Dp_r_DpDs = [0;0;0];
+            A_DpDs    = eye(3);
         end
         % Update the graphic objects, if a value has changed
         function update(obj)
