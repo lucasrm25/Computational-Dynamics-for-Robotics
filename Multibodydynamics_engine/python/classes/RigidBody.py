@@ -13,7 +13,7 @@ class RigidBody():
         # body properties
         self.m_B    = array(m_B)
         self.B_I_B  = array(B_I_B)
-        
+
         # Inertia ellipse and principal axes
         self.ellsize, self.A_BP = self.getInertiaEllipsoid()
 
@@ -117,8 +117,8 @@ class RigidBody():
         self.B_J_S         = B_J_S
         self.B_J_R         = B_J_R
         
-        for child in self.childJoints:
-            child._recursiveForwardKinematics(self.B_r_IB, self.A_IB, self.B_omega_B, self.B_v_B, self.B_omegaDot_B, self.B_a_B,  self.B_J_S, self.B_J_R)
+        for childJoint in self.childJoints:
+            childJoint._recursiveForwardKinematics(self.B_r_IB, self.A_IB, self.B_omega_B, self.B_v_B, self.B_omegaDot_B, self.B_a_B,  self.B_J_S, self.B_J_R)
 
 
     def _recursiveComputationOfMfg( self ): # -> [M, f, g]
@@ -134,8 +134,8 @@ class RigidBody():
         g =   self.B_J_S.T @ self.A_IB.T @ self.I_grav * self.m_B + \
               self.B_J_R.T @ self.A_IB.T @ zeros([3,1]) 
 
-        for child in self.childJoints:
-            M_part, f_part, g_part = child.sucBody._recursiveComputationOfMfg()
+        for childJoint in self.childJoints:
+            M_part, f_part, g_part = childJoint.sucBody._recursiveComputationOfMfg()
             M += M_part
             f += f_part
             g += g_part

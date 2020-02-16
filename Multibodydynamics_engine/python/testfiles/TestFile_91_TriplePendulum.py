@@ -36,20 +36,15 @@ ground.recursive_setall_q( q = array([30,10,-20]) * pi/180 )
 
 def odefun(t,y):
     q, qDot = y[0:nq], y[nq:]
-
     # set generalized coordinates to correspondent joints
     ground.recursive_setall_q( q=q, qDot=qDot )
-
     # calculate mass matrix M, coriollis and cetripedal forces f and gravitational force g
     M,f,g = ground.getODE()
-
     # calculate controller input
     tau = 0
-
     # return acceleration
     qDDot = ( linalg.inv(M) @ (f + g + tau) ).squeeze()
     return concatenate((qDot,qDDot))
-
 
 # initial conditions
 q0, dq0, ddq0  = ground.recursive_getall_q()
@@ -67,38 +62,10 @@ plt.grid(True)
 plt.show()
 
 
-#%% animate
+#%% Animate
 
-from vpython import *
-
-class vellipsoid:
-    import numpy as np
-
-    def __init__(self, pos, color, size):
-        self.ell = ellipsoid(pos=pos, color=color, size=size)
-        self.A_IB = eye(3)
-
-    @property
-    def pos(self):
-        return self.ell.pos 
-
-    @pos.setter
-    def pos(self, newpos:np.ndarray):
-        self.ell.pos = vector( *(newpos) )
-    
-    @property
-    def orientation(self):
-        return self.A_IB
-
-    @orientation.setter
-    def orientation(self, A_IB:np.ndarray):
-        '''
-        rotate vpython object using rotation matrix instead of vector-angle
-        '''
-        rot = R.from_matrix( A_IB @ self.A_IB.T ).as_rotvec()
-        self.ell.rotate( angle=linalg.norm(rot), axis=vector(*rot) )
-        self.A_IB = A_IB
-
+from vpython import canvas, vector, color, rate
+from classes.vpython_ext import vellipsoid
 
 canvas(width=1200, height=800, range=1, background=color.white, title='A double pendulum')
 
