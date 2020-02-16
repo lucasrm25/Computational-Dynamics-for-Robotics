@@ -115,8 +115,8 @@ class GenericJoint(ABC):
         # Pass this information on to the successor body:
         self.sucBody._recursiveForwardKinematics(S_r_IS, A_IS, S_omega_S, S_v_S, S_omegaDot_S, S_a_S, S_J_S, S_J_R)
 
-    
-    def _recursive_setall_q(self, q, qDot, qDDot):
+
+    def _recursive_setall_q(self, q=[], qDot=[], qDDot=[]):
         if size(q) > 0:
             self.q = q[self.qIndex]
         if size(qDot) > 0:  
@@ -127,10 +127,12 @@ class GenericJoint(ABC):
         for childJoint in self.sucBody.childJoints:
             childJoint._recursive_setall_q(q, qDot, qDDot)
 
+
     def _recursive_getall_q(self, q, qDot, qDDot):
-        q[self.qIndex]     = self.q
-        qDot[self.qIndex]  = self.qDot
-        qDDot[self.qIndex] = self.qDDot
+        if size(self.qIndex) > 0:
+            q[self.qIndex]     = self.q
+            qDot[self.qIndex]  = self.qDot
+            qDDot[self.qIndex] = self.qDDot
 
         for childJoint in self.sucBody.childJoints:
             childJoint._recursive_getall_q(q, qDot, qDDot)
