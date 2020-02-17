@@ -41,10 +41,8 @@ pendulum.recursive_setall_q( q = array([30,10,-20]) * pi/180 )
 
 def odefun(t,y):
     q, qDot = y[0:nq], y[nq:]
-    # set generalized coordinates to correspondent joints
-    pendulum.recursive_setall_q( q=q, qDot=qDot )
     # calculate mass matrix M, coriollis and cetripedal forces f and gravitational force g
-    M,f,g,tau = pendulum.getODE()
+    M,f,g,tau = pendulum.getODE( q=q, qDot=qDot  )
     # calculate controller input
     tauC = 0
     # return acceleration
