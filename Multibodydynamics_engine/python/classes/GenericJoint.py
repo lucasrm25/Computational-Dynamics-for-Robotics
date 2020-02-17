@@ -62,7 +62,7 @@ class GenericJoint(ABC):
     def JointAcceleration(self, q, qDot, qDDot): # -> [Dp_rDDot_DpDs, Dp_omegaDot_DpDs]
         pass
 
-    def _recursiveForwardKinematics(self, P_r_IP, A_IP, P_omega_P, P_v_P, P_omega_dot_P, P_a_P, P_J_S, P_J_R):
+    def _recursiveForwardKinematics(self, nq, P_r_IP, A_IP, P_omega_P, P_v_P, P_omega_dot_P, P_a_P, P_J_S, P_J_R):
         '''
             Given predecessor (P) body kinematics and dynamics:
                 - P_r_IP, A_IP, P_omega_P, P_v_P, P_omega_dot_P, P_a_P, P_J_S, P_J_R
@@ -78,7 +78,7 @@ class GenericJoint(ABC):
         # Angular andtranslational acceleration accross the joint:
         Dp_rDDot_DpDs, Dp_omegaDot_DpDs = self.JointAcceleration(self.q, self.qDot, self.qDDot)
         # Compute the matrices that define the velocity accross the joint as a linear function of q_dot:
-        nq = size(P_J_S,1)
+        # nq = size(P_J_S,1)
         S, R = self.JointJacobian( self.q, self.qIndex, nq)
 
         # Compute the position, velocity, and acceleration of each successing coordinate system:
@@ -113,7 +113,7 @@ class GenericJoint(ABC):
         S_J_S = A_PS.T @ (P_J_S + self.A_PDp @ S + skew(self.P_r_PDp + self.A_PDp @ Dp_r_DpDs).T @ P_J_R) - skew(self.S_r_SDs).T @ S_J_R
 
         # Pass this information on to the successor body:
-        self.sucBody._recursiveForwardKinematics(S_r_IS, A_IS, S_omega_S, S_v_S, S_omegaDot_S, S_a_S, S_J_S, S_J_R)
+        self.sucBody._recursiveForwardKinematics(nq, S_r_IS, A_IS, S_omega_S, S_v_S, S_omegaDot_S, S_a_S, S_J_S, S_J_R)
 
 
     def _recursive_setall_q(self, q=[], qDot=[], qDDot=[]):

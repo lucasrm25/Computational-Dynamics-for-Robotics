@@ -17,8 +17,8 @@ class RotationalJoint(GenericJoint):
 
     def JointFunction(self, q): # -> [Dp_r_DpDs, A_DpDs]
         gamma = asscalar(q)
-        Dp_r_DpDs = zeros([3,1])
-        A_DpDs    = array([[-self.r*gamma, -sin(gamma), 0],
+        Dp_r_DpDs = array([[-self.r*gamma,0,0]]).T
+        A_DpDs    = array([[cos(gamma), -sin(gamma), 0],
                            [sin(gamma), +cos(gamma), 0],
                            [0         , +0         , 1]])
         return [Dp_r_DpDs, A_DpDs]
