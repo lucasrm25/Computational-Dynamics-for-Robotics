@@ -44,23 +44,16 @@ class SpringDamper():
                 
                   such that I_J_S = (A_IDp @ Dp_J_S - A_IDs @ Ds_J_S)
         '''
-        P_r_IP = self.predBody.B_r_IB
-        A_IP   = self.predBody.A_IB
-        P_J_S  = self.predBody.B_J_S    # translational jacobian in P coordinates
-        P_J_R  = self.predBody.B_J_R    # rotational jacobian in P coordinates
-        S_r_IS = self.sucBody.B_r_IB
-        A_IS   = self.sucBody.A_IB
-        S_J_S  = self.sucBody.B_J_S     # translational jacobian in S coordinates
-        S_J_R  = self.sucBody.B_J_R     # translational jacobian in S coordinates
-
         # calculate displacement and velocity vectors between attaching points of the spring/damper
         I_r_DpDs = self.predBody.I_r_IQ(B_r_BQ=self.P_r_PDp) - self.sucBody.I_r_IQ (B_r_BQ = self.S_r_SDs )
         I_v_DpDs = self.predBody.I_v_Q(B_r_BQ=self.P_r_PDp) - self.sucBody.I_v_Q (B_r_BQ = self.S_r_SDs )
         
         # calculate jacobian I_J_S, such that: dDot = I_J_S * qDot, which is the ratio of the spring/damper 
         # displacement to the generalized coordinates
-        I_J_S = A_IP @ (P_J_S - skew(P_r_IP) @ P_J_R ) - A_IS @ (S_J_S - skew(S_r_IS) @ S_J_R )
+        I_J_S = self.predBody.A_IB @ (self.predBody.B_J_S - skew(self.P_r_PDp) @ self.predBody.B_J_R ) -\
+                self.sucBody.A_IB  @ (self.sucBody.B_J_S  - skew(self.S_r_SDs)  @ self.sucBody.B_J_R )
 
+        # calculate generalized forces
         tau = I_J_S.T @ ( - self.K * I_r_DpDs * (1-self.d0/norm(I_r_DpDs)) - self.D * I_v_DpDs)
         return tau
 

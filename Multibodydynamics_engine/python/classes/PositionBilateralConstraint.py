@@ -9,7 +9,7 @@ from numpy.linalg import matrix_power, norm
 from .robotics_helpfuns import skew
 from .RigidBody import RigidBody
 
-from vpython import canvas, vector, color, rate, helix
+from vpython import canvas, vector, color, rate, helix, arrow
 from classes.vpython_ext import vellipsoid
 
 
@@ -21,7 +21,7 @@ class PositionBilateralConstraint():
     def __init__(self, predBody:RigidBody, sucBody:RigidBody, 
                        A_PDp = eye(3), A_SDs = eye(3),
                        P_r_PDp = zeros([3,1]), S_r_SDs = zeros([3,1]),
-                       K=5, D=5):
+                       wn=10, ksi=1):
         # link pred and suc bodies to current joint
         self.predBody = predBody
         self.sucBody  = sucBody
@@ -31,30 +31,29 @@ class PositionBilateralConstraint():
         self.A_SDs   = A_SDs
         self.P_r_PDp = P_r_PDp
         self.S_r_SDs = S_r_SDs
-        self.K       = K    # Baumgarte proportional stabilization constant
-        self.D       = D    # Baumgarte derivative stabilization constant
+        self.K       = wn**2       # Baumgarte proportional stabilization constant
+        self.D       = 2*ksi*wn    # Baumgarte derivative stabilization constant
 
 
     def getConstraintTerms(self):
         '''
-            Compute generalized force
-            TODO: Check from which body the update is coming and calculate:
-                    - A_IDp, Dp_J_S, Dp_J_R and A_IDs, Ds_J_S, Ds_J_R
-                
-                  such that I_J_S = (A_IDp @ Dp_J_S - A_IDs @ Ds_J_S)
+            Compute constraint terms
         '''
 
-        # calculate displacement and velocity vectors between attaching points of the spring/damper
-        I_r_DpDs = self.predBody.I_r_IQ(B_r_BQ=self.P_r_PDp) - self.sucBody.I_r_IQ (B_r_BQ = self.S_r_SDs )
-        I_v_DpDs = self.predBody.I_v_Q(B_r_BQ=self.P_r_PDp) - self.sucBody.I_v_Q (B_r_BQ = self.S_r_SDs )
+        # calculate displacement and velocity constraint violation
+        I_c = self.predBody.I_r_IQ(B_r_BQ=self.P_r_PDp) - self.sucBody.I_r_IQ (B_r_BQ = self.S_r_SDs )
+        I_cDot = self.predBody.I_v_Q(B_r_BQ=self.P_r_PDp) - self.sucBody.I_v_Q (B_r_BQ = self.S_r_SDs )
         
         # calculate jacobian J_lambda, such that: cDot = J_lambda * qDot, which is the ratio of the constraint
         # displacement to the generalized coordinates
-        J_lambda = self.predBody.A_IB @ (self.predBody.B_J_S - skew(self.predBody.B_r_IB) @ self.predBody.B_J_R ) - /
-                   self.sucBody.A_IB  @ (self.sucBody.B_J_S  - skew(self.sucBody.B_r_IB)  @ self.sucBody.B_J_R )
+        J_lambda = self.predBody.A_IB @ (self.predBody.B_J_S - skew(self.P_r_PDp) @ self.predBody.B_J_R ) -\
+                   self.sucBody.A_IB  @ (self.sucBody.B_J_S  - skew(self.S_r_SDs) @ self.sucBody.B_J_R )
 
-        sigma_lambda = self.predBody.A_IB (matrix_power(skew(self.predBody.P_omega_P),2) ) @ self.P_r_PDp - /
-                       self.sucBody.A_IB  (matrix_power(skew(self.sucBody.P_omega_P),2)  ) @ self.S_r_SDs
+        sigma_lambda = self.predBody.I_a_Q( B_r_BQ=self.P_r_PDp ) - self.sucBody.I_a_Q( B_r_BQ=self.S_r_SDs )
+
+        # add Baumgarte stabilization
+        nc = sigma_lambda.size
+        sigma_lambda += eye(nc)*self.D @ I_cDot + eye(nc)*self.K @ I_c
 
         return [J_lambda, sigma_lambda]
 

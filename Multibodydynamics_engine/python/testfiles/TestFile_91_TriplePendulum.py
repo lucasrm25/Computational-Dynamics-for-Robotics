@@ -21,8 +21,8 @@ joint1 = RotationalJoint(ground,link1, A_PDp=eye(3), A_SDs=eye(3), P_r_PDp=array
 joint2 = RotationalJoint(link1, link2, A_PDp=eye(3), A_SDs=eye(3), P_r_PDp=array([[0.5,0,0]]).T, S_r_SDs= array([[-0.5,0,0]]).T)
 joint3 = RotationalJoint(link1, link3, A_PDp=eye(3), A_SDs=eye(3), P_r_PDp=array([[0.5,0,0]]).T, S_r_SDs= array([[-0.5,0,0]]).T)
 
-springDamper1 = SpringDamper(link2, link3, P_r_PDp=array([[0.5,0,0]]).T, S_r_SDs=array([[0.5,0,0]]).T, K=10, D=1, d0=0.5)
-springDamper2 = SpringDamper(ground, link1, P_r_PDp=array([[1,0,0]]).T, S_r_SDs=array([[0.5,0,0]]).T, K=200, D=20, d0=0)
+springDamper1 = SpringDamper(link2, link3, P_r_PDp=array([[0.5,0,0]]).T, S_r_SDs=array([[0.5,0,0]]).T, K=10, D=1, d0=1)
+springDamper2 = SpringDamper(ground, link1, P_r_PDp=array([[1,0,0]]).T, S_r_SDs=array([[0.5,0,0]]).T, K=100, D=15, d0=0)
 
 pendulum = MultiRigidBody(ground=ground, springDampers=[springDamper1, springDamper2])
 
@@ -41,12 +41,7 @@ pendulum.recursive_setall_q( q = array([30,10,-20]) * pi/180 )
 
 def odefun(t,y):
     q, qDot = y[0:nq], y[nq:]
-    # calculate mass matrix M, coriollis and cetripedal forces f and gravitational force g
-    M,f,g,tau = pendulum.getODE( q=q, qDot=qDot  )
-    # calculate controller input
-    tauC = 0
-    # return acceleration
-    qDDot = ( linalg.inv(M) @ (f + g + tau + tauC) ).squeeze()
+    qDDot = pendulum.getODE ( q=q, qDot=qDot )
     return concatenate((qDot,qDDot))
 
 # initial conditions
@@ -71,10 +66,10 @@ plt.show()
 
 pendulum.initGraphics(width=1200, height=800, range=1.5, title='A double pendulum', updaterate=fps)
 
-for t,y in zip(odesol.t,odesol.y.T):
-
-    pendulum.recursive_setall_q( q=y[0:nq], qDot=y[nq:] )
-    pendulum.updateKinTree()
-    pendulum.updateGraphics()
+while True:
+    for t,y in zip(odesol.t,odesol.y.T):
+        pendulum.recursive_setall_q( q=y[0:nq], qDot=y[nq:] )
+        pendulum.updateKinTree()
+        pendulum.updateGraphics()
 
 print('Animation finished!')

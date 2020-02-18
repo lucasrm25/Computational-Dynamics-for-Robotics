@@ -1,5 +1,5 @@
-from numpy import array, ones, zeros, eye, size
-from numpy.linalg import inv
+from numpy import eye, array, ones, zeros, pi, arange, concatenate, append, diag, linspace, block, sum, vstack
+from numpy.linalg import inv, norm, solve, pinv
 from scipy.linalg import expm
 from .robotics_helpfuns import skew
 from .RigidBody import RigidBody, Ground
@@ -29,14 +29,13 @@ class MultiRigidBody():
     def updateKinTree( self ):
         self.ground._recursiveForwardKinematics(nq=self.nq)
 
-    def getODE( self, q, qDot ): # -> [M, f, g, tau]
-        # set q and qDot to correspondent joints
-        self.recursive_setall_q( q=q, qDot=qDot )
+    def getODE( self, q, qDot ): # -> qDDot
 
         # Set all joint accelerations to zero, so the subsequent call to _recursiveForwardKinematics 
         # will produce bias accelerations, not real accelerations
-        for childJoint in self.ground.childJoints:
-            childJoint._recursive_reset_qDDot()
+        self.recursive_setall_q( q=q, qDot=qDot, qDDot=zeros(self.nq) )
+        
+        # calculate system matrices
         self.updateKinTree()
         [M, f, g] = self.ground._recursiveComputationOfMfg()
         
@@ -44,8 +43,38 @@ class MultiRigidBody():
         tau = 0
         for springdamper in self.springDampers:
             tau += springdamper.computationOfTau()
+        
+        # calculate controller input
+        tauC = 0
 
-        return M, f, g, tau
+        # calculate constraint matrices
+        J_lambda, sigma_lambda = array([]),array([])
+        for const in self.bilateralConstraints:
+            J, sigma = const.getConstraintTerms()
+            J_lambda = vstack( [J_lambda, J] ) if J_lambda.size else J
+            sigma_lambda = vstack( [sigma_lambda, sigma] ) if sigma_lambda.size else sigma
+        
+        nc = sigma_lambda.size # number of constraints
+        if nc:
+            # first remove constraint forces that can not be determined (row of zeros in J_lambda)
+            colkeep = sum(J_lambda,axis=1) != 0
+            J_lambda = J_lambda[colkeep,:]
+            sigma_lambda = sigma_lambda[colkeep]
+            nc = colkeep.sum()  # new number of constraints
+            # set DAE system
+            A = block([ [M,         -J_lambda.T], 
+                        [J_lambda,  zeros([nc,nc])] ])
+            b = block([ [f + g + tau + tauC],
+                        [-sigma_lambda] ])
+        else:
+            # set ODE system
+            A = M
+            b = f + g + tau + tauC
+
+        # solve for accelerations
+        qDDot= solve(A,b)[0:self.nq].squeeze()
+
+        return qDDot
 
 
     def recursive_setall_q(self, q=[], qDot=[], qDDot=[]):
@@ -67,10 +96,14 @@ class MultiRigidBody():
         self.ground._recursiveInitGraphicsVPython()
         for sd in self.springDampers:
             sd.initGraphics()
+        for bc in self.bilateralConstraints:
+            bc.initGraphics()
         self.updaterate = updaterate
     
     def updateGraphics(self):
         self.ground._recursiveUpdateGraphicsVPython()
         for sd in self.springDampers:
             sd.updateGraphics()
+        for bc in self.bilateralConstraints:
+            bc.updateGraphics()
         rate(self.updaterate)

@@ -41,11 +41,6 @@ class GenericJoint(ABC):
         # generalized coordinates indices
         self.qIndex = []
 
-    def _recursive_reset_qDDot(self):
-        self.qDDot[:] = 0
-        for child in self.sucBody.childJoints:
-            child._recursive_reset_qDDot()
-
     @abstractmethod
     def JointJacobian(self, q, qIndex, nq): # -> [S, R]
         pass
