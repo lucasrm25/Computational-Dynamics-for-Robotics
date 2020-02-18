@@ -60,7 +60,6 @@ q0, dq0, ddq0  = pendulum.recursive_getall_q()
 tf = 20
 fps = 60
 odesol = solve_ivp( odefun, t_span=[0,tf], t_eval=arange(0,tf,1/fps), y0=concatenate((q0,dq0)).squeeze(), method='RK45', dense_output=True, events=None )
-# odesol = solve_ivp( odefun, t_span=[0,tf], y0=concatenate((q0,dq0)).squeeze(), method='BDF', dense_output=False, events=None )
 print(odesol.message)
 
 from matplotlib import pyplot as plt
