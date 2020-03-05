@@ -4,7 +4,7 @@ from numpy import eye, array, ones, zeros, pi, arange, concatenate, append, diag
 from numpy.linalg import inv, norm, solve, pinv
 from scipy.integrate import ode, odeint, solve_ivp
 from scipy.spatial.transform import Rotation as R
-from classes.RigidBody import RigidBody, Ground
+from classes.RigidBody import RigidBody, Ground, Rod
 from classes.MultiRigidBody import MultiRigidBody
 from classes.RotationalJoint import RotationalJoint
 from classes.SpringDamper import SpringDamper
@@ -15,10 +15,11 @@ from classes.PositionBilateralConstraint import PositionBilateralConstraint
 
 I_grav = array([[0,-9.81,0]]).T
 ground = Ground()
-link1 = RigidBody(m_B=4, B_I_B=diag([0.0042,0.8354,0.8354]), I_grav=I_grav)
-link2 = RigidBody(m_B=4, B_I_B=diag([0.0042,0.8354,0.8354]), I_grav=I_grav)
-link3 = RigidBody(m_B=4, B_I_B=diag([0.0042,0.8354,0.8354]), I_grav=I_grav)
-link4 = RigidBody(m_B=4, B_I_B=diag([0.0042,0.8354,0.8354]), I_grav=I_grav)
+
+link1 = Rod(length=1, radius_o=0.02, radius_i=0.01, I_grav=I_grav)
+link2 = Rod(length=1, radius_o=0.02, radius_i=0.01, I_grav=I_grav)
+link3 = Rod(length=1, radius_o=0.02, radius_i=0.01, I_grav=I_grav)
+link4 = Rod(length=1, radius_o=0.02, radius_i=0.01, I_grav=I_grav)
 
 joint1 = RotationalJoint(ground,link1, A_PDp=eye(3), A_SDs=eye(3), P_r_PDp=array([[0,0,0]]).T,   S_r_SDs= array([[-0.5,0,0]]).T)
 joint2 = RotationalJoint(link1, link2, A_PDp=eye(3), A_SDs=eye(3), P_r_PDp=array([[0.5,0,0]]).T, S_r_SDs= array([[-0.5,0,0]]).T)

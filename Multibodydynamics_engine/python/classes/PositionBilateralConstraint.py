@@ -41,13 +41,13 @@ class PositionBilateralConstraint():
         '''
 
         # calculate displacement and velocity constraint violation
-        I_c = self.predBody.I_r_IQ(B_r_BQ=self.P_r_PDp) - self.sucBody.I_r_IQ (B_r_BQ = self.S_r_SDs )
-        I_cDot = self.predBody.I_v_Q(B_r_BQ=self.P_r_PDp) - self.sucBody.I_v_Q (B_r_BQ = self.S_r_SDs )
+        I_c    = self.predBody.I_r_IQ(B_r_BQ=self.P_r_PDp) - self.sucBody.I_r_IQ( B_r_BQ = self.S_r_SDs )
+        I_cDot = self.predBody.I_v_Q(B_r_BQ=self.P_r_PDp)  - self.sucBody.I_v_Q(  B_r_BQ = self.S_r_SDs )
         
         # calculate jacobian J_lambda, such that: cDot = J_lambda * qDot, which is the ratio of the constraint
         # displacement to the generalized coordinates
-        J_lambda = self.predBody.A_IB @ (self.predBody.B_J_S - skew(self.P_r_PDp) @ self.predBody.B_J_R ) -\
-                   self.sucBody.A_IB  @ (self.sucBody.B_J_S  - skew(self.S_r_SDs) @ self.sucBody.B_J_R )
+        J_lambda = self.predBody.A_IB @ ( self.predBody.B_J_S - skew(self.P_r_PDp) @ self.predBody.B_J_R ) -\
+                   self.sucBody.A_IB  @ ( self.sucBody.B_J_S  - skew(self.S_r_SDs) @ self.sucBody.B_J_R )
 
         sigma_lambda = self.predBody.I_a_Q( B_r_BQ=self.P_r_PDp ) - self.sucBody.I_a_Q( B_r_BQ=self.S_r_SDs )
 
@@ -61,8 +61,8 @@ class PositionBilateralConstraint():
     ''' -------------------- GRAPHICS ------------------- '''
 
 
-    def initGraphics(self, shaftwidth=0.01):
-        self.arrow = arrow(pos=vector(0,0,0), axis=vector(1,0,0), shaftwidth=shaftwidth)
+    def initGraphics(self):
+        self.arrow = arrow(pos=vector(0,0,0), axis=vector(1,0,0)) # , shaftwidth=shaftwidth
     
     def updateGraphics(self):
         origin = self.predBody.A_IB @ (self.predBody.B_r_IB + self.P_r_PDp )

@@ -21,7 +21,8 @@ class SpringDamper():
     def __init__(self, predBody:RigidBody, sucBody:RigidBody, 
                        A_PDp = eye(3), A_SDs = eye(3),
                        P_r_PDp = zeros([3,1]), S_r_SDs = zeros([3,1]),
-                       d0 = 0, K=100, D=5):
+                       d0 = 0, K=100, D=5,
+                       radius=0.05, coils=20):
         # link pred and suc bodies to current joint
         self.predBody = predBody
         self.sucBody  = sucBody
@@ -34,6 +35,10 @@ class SpringDamper():
         self.d0      = d0
         self.K       = K
         self.D       = D
+
+        # store graphic properties
+        self.radius = radius
+        self.coils = coils
 
 
     def computationOfTau(self) -> ndarray:
@@ -62,8 +67,8 @@ class SpringDamper():
     ''' -------------------- GRAPHICS ------------------- '''
 
 
-    def initGraphics(self, radius=0.05):
-        self.helix = helix(pos=vector(0,0,0), axis=vector(1,0,0), radius=radius, coils = 20)
+    def initGraphics(self):
+        self.helix = helix(pos=vector(0,0,0), axis=vector(1,0,0), radius=self.radius, coils=self.coils)
     
     def updateGraphics(self):
         origin = self.predBody.A_IB @ (self.predBody.B_r_IB + self.P_r_PDp )

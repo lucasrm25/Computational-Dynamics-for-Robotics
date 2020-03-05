@@ -15,3 +15,8 @@ def skew(vec):
     S[2,1] =  vec[0]
     
     return S
+
+def rotZ(angle):
+    return np.array([[np.cos(angle),-np.sin(angle),0],
+                     [np.sin(angle), np.cos(angle),0],
+                     [0,             0,            1]])

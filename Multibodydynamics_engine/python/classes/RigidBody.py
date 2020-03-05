@@ -1,14 +1,14 @@
-from numpy import array, ones, zeros, eye, size, sqrt
+from numpy import array, ones, zeros, eye, size, sqrt, pi, diag
 from numpy.linalg import inv, eig, matrix_power
 from scipy.linalg import expm
 from .robotics_helpfuns import skew
 
-from vpython import canvas, vector, color, rate
-from classes.vpython_ext import vellipsoid
+from vpython import canvas, vector, color, rate, cylinder
+from .vpython_ext import vellipsoid
 
 class RigidBody():
     
-    def __init__( self, m_B=1, B_I_B=eye(3), I_grav=array([[0,0,9.81]]).T ):
+    def __init__( self, m_B=1, B_I_B=eye(3), I_grav=array([[0,0,-9.81]]).T ):
         # link body to joints
         self.childJoints = array([])
         self.parentJoint = array([])
@@ -140,7 +140,7 @@ class RigidBody():
             # Inertia ellipse and principal axes
             self.ellsize, self.A_BP = self.getInertiaEllipsoid()
             # create Ellipse object in OPENGL
-            self.ellipsoid = vellipsoid(pos=vector(0,0,0), color=color.orange, size=vector(*self.ellsize))
+            self.ellipsoid = vellipsoid(pos=vector(0,0,0), color=color.orange, size=vector(*(self.ellsize*2)))
             # recursive call to other objects in the tree
         for childJoint in self.childJoints:
             childJoint.sucBody._recursiveInitGraphicsVPython()
@@ -157,7 +157,7 @@ class RigidBody():
         '''
             returns:
                 - A_BP: rotation matrix from principal axes to body coordinates
-                - ellsize: ellipse size corresponding to the Inertia in principal axes (P)
+                - ellsize: vector with the 3 ellipse principal radius corresponding to the Inertia matrix
         '''
         # Compute the inertia axis:
         D, V = eig(self.B_I_B)
@@ -175,7 +175,46 @@ class RigidBody():
 
 
 
-
 class Ground(RigidBody):
     def __init__(self):
         super().__init__(m_B=0, B_I_B=zeros([3,3]))
+
+
+class Rod(RigidBody):
+    def __init__( self, length=1, radius_o=0.01, radius_i=0, density=8000, I_grav=array([[0,0,-9.81]]).T ):
+        self.length = length
+        self.radius_i = radius_i
+        self.radius_o = radius_o
+        self.density = density
+        volume = pi * (radius_o**2 - radius_i**2) * length
+        mass = density * volume
+        inertia = mass * diag([0.5*(radius_o**2 + radius_i**2) , 0.25*(radius_o**2 + radius_i**2 + length**2/3), 0.25*(radius_o**2 + radius_i**2 + length**2/3) ])
+        super().__init__( m_B=mass, B_I_B=inertia, I_grav=I_grav )
+    
+    def _recursiveInitGraphicsVPython(self):
+        if not self.isRoot:   # for now, ground does not need a graphics representation
+            # create Ellipse object in OPENGL
+            self.cylinder = cylinder(pos=vector(*(self.A_IB @ self.B_r_IB)), color=color.orange, axis=vector(self.length,0,0), radius=self.radius_o)
+            # recursive call to other objects in the tree
+        for childJoint in self.childJoints:
+            childJoint.sucBody._recursiveInitGraphicsVPython()
+
+    def _recursiveUpdateGraphicsVPython(self):
+        if not self.isRoot:   # for now, ground does not need a graphics representation
+            self.cylinder.pos  = vector( *(self.A_IB @ (self.B_r_IB - array([[self.length/2,0,0]]).T) ) )
+            self.cylinder.axis = vector( *( self.A_IB[:,0] * self.length ) )
+        # recursive call to other objects in the tree
+        for childJoint in self.childJoints:
+            childJoint.sucBody._recursiveUpdateGraphicsVPython()
+
+
+class Ellipsoid(RigidBody):
+    def __init__( self, rx=1, ry=0.01, rz=0, density=8000, I_grav=array([[0,0,-9.81]]).T ):
+        # ellipsoid principal diameters
+        self.rx = rx
+        self.ry = ry
+        self.rz = rz
+        volume = 4/3 * pi * rx * ry * rz
+        mass = density * volume
+        inertia = mass/5 * diag([ry**2+rz**2, rx**2+rz**2, rx**2+ry**2])
+        super().__init__( m_B=mass, B_I_B=inertia, I_grav=I_grav )
